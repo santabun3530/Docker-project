@@ -1,0 +1,115 @@
+# version: '3.8'
+
+# services:
+
+#   db:
+#     image: postgres:15
+#     container_name: postgres-db
+#     restart: always
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: crudapp
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#   redis:
+#     image: redis:alpine
+#     container_name: redis-server --appendonly yes
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis-data:/data
+
+#   frontend:
+#     build:
+#       ./frontend
+#     volumes: 
+#       - ./frontend:/app 
+#       - /app/node_modules
+#     image: react-app
+#     container_name: react-frontend
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - backend
+  
+
+#   backend:
+#     build: ./backend
+#     volumes:
+#       - ./backend:/app 
+#     image: backend-server
+#     ports:
+#       - "8080:8080"
+#     depends_on:
+#       - db
+#     environment:
+#       - DB_HOST=db
+#       - DB_PORT=5432
+#       - DB_USER=postgres
+#       - DB_PASSWORD=postgres
+#       - DB_NAME=crudapp
+#   volumes:
+#       postgres_data:
+#       redis-data:
+
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: crudapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+        test: ["CMD", "pg_isready", "-U", "postgres"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+
+  redis:
+    image: redis:alpine
+    container_name: redis-server
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  frontend:
+    build:
+      context: ./frontend
+    volumes: 
+      - ./frontend:/app 
+      - /app/node_modules
+    image: react-app
+    container_name: react-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - ./backend:/app 
+    image: backend-server
+    container_name: backend-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  redis-data:
